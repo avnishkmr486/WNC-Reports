@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ADP Payroll Export | BoReports</title>
+<style>
+  :root{
+    --sidebar-bg:#101a2b;
+    --sidebar-icon:#8b96ab;
+    --sidebar-icon-active:#ffffff;
+    --header-bg:#ffffff;
+    --breadcrumb-bg:#eef1f5;
+    --border:#d7dce3;
+    --panel-header-bg:#e9ebee;
+    --text:#2c333a;
+    --text-muted:#6b7280;
+    --accent:#1f6fb2;
+    --accent-dark:#175a91;
+    --help-red:#e0392c;
+    --link:#2f6fa8;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Segoe UI", Arial, Helvetica, sans-serif;
+    color:var(--text);
+    background:#f4f5f7;
+  }
+
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* Sidebar */
+  .sidebar{
+    width:52px;
+    background:var(--sidebar-bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 0;
+    gap:26px;
+    flex-shrink:0;
+  }
+  .sidebar .menu-btn{
+    color:var(--sidebar-icon-active);
+    cursor:pointer;
+    margin-bottom:6px;
+  }
+  .sidebar .icon{
+    width:22px;
+    height:22px;
+    color:var(--sidebar-icon);
+    cursor:pointer;
+    transition:color .15s ease;
+  }
+  .sidebar .icon:hover,
+  .sidebar .icon.active{
+    color:var(--sidebar-icon-active);
+  }
+
+  /* Main column */
+  .main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+  }
+
+  /* Top header */
+  .topbar{
+    height:52px;
+    background:var(--header-bg);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:18px;
+    padding:0 20px;
+  }
+  .help-btn{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--help-red);
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    padding:6px 14px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .topbar .icon-btn{
+    width:20px;
+    height:20px;
+    color:#555f6b;
+    cursor:pointer;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb{
+    background:var(--breadcrumb-bg);
+    border-bottom:1px solid var(--border);
+    padding:8px 20px;
+    font-size:13px;
+    color:var(--text-muted);
+  }
+  .breadcrumb a{
+    color:var(--link);
+    text-decoration:none;
+  }
+  .breadcrumb a:hover{ text-decoration:underline; }
+  .breadcrumb .sep{ margin:0 6px; color:#a6adb8; }
+  .breadcrumb .current{ color:var(--text); font-weight:600; }
+
+  /* Content */
+  .content{
+    flex:1;
+    padding:24px;
+  }
+
+  .qualifier-panel{
+    max-width:1200px;
+    margin:0 auto;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:3px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+
+  .panel-header{
+    background:var(--panel-header-bg);
+    text-align:center;
+    padding:10px 16px;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.2px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .qualifier-row{
+    display:flex;
+    align-items:flex-start;
+    padding:16px 20px;
+    border-bottom:1px solid var(--border);
+    gap:20px;
+  }
+  .qualifier-row:last-of-type{
+    border-bottom:none;
+  }
+
+  .qualifier-label{
+    width:170px;
+    flex-shrink:0;
+    font-weight:600;
+    font-size:13.5px;
+    padding-top:7px;
+  }
+
+  .qualifier-field{
+    flex:1;
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  select,
+  input[type="text"]{
+    font-family:inherit;
+    font-size:13px;
+    padding:6px 10px;
+    border:1px solid #b9c0c9;
+    border-radius:3px;
+    background:#fff;
+    color:var(--text);
+  }
+  select:focus,
+  input:focus{
+    outline:2px solid rgba(31,111,178,.35);
+    border-color:var(--accent);
+  }
+
+  select.org-select{
+    min-width:220px;
+  }
+
+  .store-list{
+    width:320px;
+    height:96px;
+    overflow-y:auto;
+    border:1px solid #b9c0c9;
+    border-radius:3px;
+    background:#fff;
+    font-size:13px;
+  }
+  .store-list ul{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  .store-list li{
+    padding:3px 10px;
+    color:var(--link);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .store-list li:hover{
+    background:#eef4fa;
+  }
+  .store-list li.selected{
+    background:#dceafb;
+  }
+  .store-list li.select-all{
+    font-weight:700;
+  }
+
+  .date-group{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .date-input-wrap{
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .date-input-wrap input{
+    width:130px;
+    padding-right:30px;
+  }
+  .date-input-wrap .cal-icon{
+    position:absolute;
+    right:6px;
+    width:18px;
+    height:18px;
+    color:#4a5561;
+    background:#eef0f2;
+    border:1px solid #b9c0c9;
+    border-radius:2px;
+    padding:2px;
+    cursor:pointer;
+  }
+
+  .datepicker{
+    display:none;
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    width:230px;
+    background:#fff;
+    border:1px solid #b9c0c9;
+    border-radius:4px;
+    box-shadow:0 6px 18px rgba(0,0,0,.15);
+    padding:10px;
+    z-index:50;
+  }
+  .datepicker.open{
+    display:block;
+  }
+  .datepicker-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .datepicker-header .dp-title{
+    font-size:13px;
+    font-weight:700;
+  }
+  .dp-nav{
+    background:none;
+    border:none;
+    font-size:16px;
+    line-height:1;
+    color:var(--accent);
+    cursor:pointer;
+    padding:2px 8px;
+    border-radius:3px;
+  }
+  .dp-nav:hover{
+    background:#eef4fa;
+  }
+  .datepicker-weekdays,
+  .datepicker-days{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:2px;
+    text-align:center;
+  }
+  .datepicker-weekdays span{
+    font-size:11px;
+    font-weight:700;
+    color:var(--text-muted);
+    padding:4px 0;
+  }
+  .datepicker-days button{
+    font-family:inherit;
+    font-size:12.5px;
+    background:none;
+    border:none;
+    border-radius:3px;
+    padding:6px 0;
+    cursor:pointer;
+    color:var(--text);
+  }
+  .datepicker-days button:hover{
+    background:#eef4fa;
+  }
+  .datepicker-days button.empty{
+    cursor:default;
+  }
+  .datepicker-days button.empty:hover{
+    background:none;
+  }
+  .datepicker-days button.selected{
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+  }
+  .datepicker-days button.today:not(.selected){
+    box-shadow:inset 0 0 0 1px var(--accent);
+  }
+
+  .actions-row{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    padding:20px;
+    flex-wrap:wrap;
+  }
+
+  .btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    padding:9px 18px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .btn:hover{
+    background:var(--accent-dark);
+  }
+  .btn:active{
+    transform:translateY(1px);
+  }
+
+  .qualifier-note{
+    max-width:1200px;
+    margin:12px auto 0;
+    padding:0 4px;
+    font-size:12.5px;
+    color:var(--text-muted);
+  }
+
+  /* Validation modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(20,24,30,.55);
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  }
+  .modal-overlay.open{
+    display:flex;
+  }
+  .modal-box{
+    width:100%;
+    max-width:520px;
+    margin:0 16px;
+    background:#fff;
+    border-radius:4px;
+    overflow:hidden;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  .modal-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--panel-header-bg);
+    border-bottom:1px solid var(--border);
+    padding:12px 16px;
+  }
+  .modal-header h2{
+    margin:0;
+    font-size:15px;
+    font-weight:700;
+    color:var(--text);
+  }
+  .modal-close{
+    background:none;
+    border:none;
+    font-size:18px;
+    line-height:1;
+    color:var(--text-muted);
+    cursor:pointer;
+    padding:0 2px;
+  }
+  .modal-close:hover{
+    color:var(--text);
+  }
+  .modal-body{
+    padding:20px 16px;
+    font-size:13.5px;
+    font-weight:600;
+    color:#b3261e;
+    line-height:1.5;
+  }
+  .modal-footer{
+    display:flex;
+    justify-content:flex-end;
+    padding:12px 16px;
+    border-top:1px solid var(--border);
+  }
+  .modal-footer .btn{
+    padding:7px 22px;
+  }
+
+  @media (max-width:720px){
+    .qualifier-row{ flex-direction:column; }
+    .qualifier-label{ width:auto; padding-top:0; }
+    .store-list{ width:100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <nav class="sidebar" aria-label="Primary navigation">
+    <svg class="menu-btn" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <svg class="icon active" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Home"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Schedules"><rect x="3" y="5" width="18" height="15" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Operations"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.1-3.1a4 4 0 0 1-5 5L6.5 20.5a2 2 0 0 1-3-3L12.8 8.2a4 4 0 0 1 5-5z"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Employees"><circle cx="9" cy="8" r="3"/><path d="M2 20c0-3 3-5 7-5s7 2 7 5"/><path d="M17 11a3 3 0 1 0 0-6"/><path d="M23 20c0-2.5-2-4.2-4.5-4.8"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Reports"><path d="M4 19V5a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v5h5"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Documents"><path d="M4 4h11l5 5v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="User Settings"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Help"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 1.9"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+  </nav>
+
+  <div class="main">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="help-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.4 2.3c-.9.4-1.4 1-1.4 1.9"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
+        Help
+      </button>
+      <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Search"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="My Apps"><rect x="3" y="3" width="6" height="6"/><rect x="9.5" y="3" width="6" height="6"/><rect x="16" y="3" width="6" height="6"/><rect x="3" y="9.5" width="6" height="6"/><rect x="9.5" y="9.5" width="6" height="6"/><rect x="16" y="9.5" width="6" height="6"/><rect x="3" y="16" width="6" height="6"/><rect x="9.5" y="16" width="6" height="6"/><rect x="16" y="16" width="6" height="6"/></svg>
+      <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Notifications"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <svg class="icon-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Account"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a href="#">BoWorkforce</a><span class="sep">&gt;</span>
+      <a href="#">Reports</a><span class="sep">&gt;</span>
+      <a href="#">Payroll</a><span class="sep">&gt;</span>
+      <span class="current">ADP Payroll Export</span>
+      <span style="margin-left:6px; color:#8a929c;">| (User: corpadmin)</span>
+    </div>
+
+    <!-- Content -->
+    <main class="content">
+      <form class="qualifier-panel" id="qualifierForm">
+        <div class="panel-header">Qualifiers</div>
+
+        <div class="qualifier-row">
+          <label class="qualifier-label" for="organization">Organization</label>
+          <div class="qualifier-field">
+            <select id="organization" class="org-select" name="organization">
+              <option value="">Select One</option>
+              <option value="BOJWNC" selected>BOJWNC</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="qualifier-row">
+          <span class="qualifier-label">Store</span>
+          <div class="qualifier-field">
+            <div class="store-list" id="storeList" role="listbox" aria-multiselectable="true" tabindex="0">
+              <ul>
+                <li role="option" class="select-all selected" data-value="__all__">Select All</li>
+                <li role="option" class="selected" data-value="1029">1029, Chesterfield</li>
+                <li role="option" class="selected" data-value="1016">1016, Waynesville</li>
+                <li role="option" class="selected" data-value="1018">1018, Eden</li>
+                <li role="option" class="selected" data-value="1032">1032, Hendersonville</li>
+                <li role="option" class="selected" data-value="1044">1044, Brevard</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="qualifier-row">
+          <label class="qualifier-label" for="payPeriodEndDate">Week End Date</label>
+          <div class="qualifier-field">
+            <div class="date-group">
+              <div class="date-input-wrap">
+                <input type="text" id="payPeriodEndDate" name="payPeriodEndDate" autocomplete="off" />
+                <svg class="cal-icon" id="payPeriodCalIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="1"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg>
+                <div class="datepicker" id="payPeriodDatepicker">
+                  <div class="datepicker-header">
+                    <button type="button" class="dp-nav" id="dpPrevMonth" aria-label="Previous month">&lsaquo;</button>
+                    <span class="dp-title" id="dpTitle"></span>
+                    <button type="button" class="dp-nav" id="dpNextMonth" aria-label="Next month">&rsaquo;</button>
+                  </div>
+                  <div class="datepicker-weekdays">
+                    <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+                  </div>
+                  <div class="datepicker-days" id="dpDays"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qualifier-row">
+          <label class="qualifier-label" for="fileType">File Type</label>
+          <div class="qualifier-field">
+            <select id="fileType" class="org-select" name="fileType">
+              <option value="">Select One</option>
+              <option value="salaried" selected>Salaried Manager</option>
+              <option value="hourly">Hourly Employees</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions-row">
+          <button type="submit" class="btn">Generate Report</button>
+        </div>
+      </form>
+
+      <p class="qualifier-note">Each button generates one CSV file (named with the generation date/time) in the defined ADP format for the selected organization, stores and pay period.</p>
+    </main>
+
+  </div>
+</div>
+
+<!-- Validation modal -->
+<div class="modal-overlay" id="validationModal" role="alertdialog" aria-modal="true" aria-labelledby="validationTitle">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="validationTitle">Validation Error</h2>
+      <button type="button" class="modal-close" id="validationClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-body" id="validationMessage"></div>
+    <div class="modal-footer">
+      <button type="button" class="btn" id="validationOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Multi-select behavior for the Store list box, with a "Select All" toggle.
+  const storeList = document.getElementById('storeList');
+  const storeItems = Array.from(storeList.querySelectorAll('li:not(.select-all)'));
+  const selectAllItem = storeList.querySelector('li.select-all');
+
+  selectAllItem.addEventListener('click', function () {
+    const allSelected = storeItems.every(function (li) { return li.classList.contains('selected'); });
+    storeItems.forEach(function (li) { li.classList.toggle('selected', !allSelected); });
+  });
+
+  storeItems.forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      if (!e.ctrlKey && !e.metaKey) {
+        storeItems.forEach(function (li) { li.classList.remove('selected'); });
+      }
+      item.classList.toggle('selected');
+    });
+  });
+
+  // --- Week End Date picker ----------------------------------------------
+  // The user can pick any date within the week; the export always batches
+  // under the Sunday that ends that week (see getWeekEndingSunday below).
+  (function () {
+    const input = document.getElementById('payPeriodEndDate');
+    const icon = document.getElementById('payPeriodCalIcon');
+    const picker = document.getElementById('payPeriodDatepicker');
+    const title = document.getElementById('dpTitle');
+    const daysGrid = document.getElementById('dpDays');
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    const today = new Date();
+    input.value = String(today.getMonth() + 1).padStart(2, '0') + '/' + String(today.getDate()).padStart(2, '0') + '/' + today.getFullYear();
+
+    function parseInputDate() {
+      const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(input.value.trim());
+      if (!match) return new Date();
+      return new Date(Number(match[3]), Number(match[1]) - 1, Number(match[2]));
+    }
+
+    let viewDate = parseInputDate();
+
+    function render() {
+      title.textContent = monthNames[viewDate.getMonth()] + ' ' + viewDate.getFullYear();
+      daysGrid.innerHTML = '';
+
+      const selected = parseInputDate();
+      const today = new Date();
+      const firstOfMonth = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+      const daysInMonth = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0).getDate();
+
+      for (let i = 0; i < firstOfMonth.getDay(); i++) {
+        const filler = document.createElement('button');
+        filler.type = 'button';
+        filler.className = 'empty';
+        filler.disabled = true;
+        daysGrid.appendChild(filler);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = String(day);
+        if (cellDate.toDateString() === today.toDateString()) btn.classList.add('today');
+        if (cellDate.toDateString() === selected.toDateString()) btn.classList.add('selected');
+        btn.addEventListener('click', function () {
+          const mm = String(cellDate.getMonth() + 1).padStart(2, '0');
+          const dd = String(cellDate.getDate()).padStart(2, '0');
+          input.value = mm + '/' + dd + '/' + cellDate.getFullYear();
+          closePicker();
+        });
+        daysGrid.appendChild(btn);
+      }
+    }
+
+    function openPicker() {
+      viewDate = parseInputDate();
+      render();
+      picker.classList.add('open');
+    }
+
+    function closePicker() {
+      picker.classList.remove('open');
+    }
+
+    document.getElementById('dpPrevMonth').addEventListener('click', function () {
+      viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1);
+      render();
+    });
+    document.getElementById('dpNextMonth').addEventListener('click', function () {
+      viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1);
+      render();
+    });
+
+    input.addEventListener('focus', openPicker);
+    input.addEventListener('click', openPicker);
+    icon.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (picker.classList.contains('open')) {
+        closePicker();
+      } else {
+        openPicker();
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!picker.contains(e.target) && e.target !== input && e.target !== icon) {
+        closePicker();
+      }
+    });
+  })();
+
+  // --- ADP export mapping ---------------------------------------------------
+  // Co Code is a fixed configuration value for this organization.
+  const CO_CODE = 'XMB';
+  // File-name prefix codes per the ADP interface spec.
+  const FILE_CODE = { salaried: 'SNE', hourly: 'EPI' };
+
+  // Mock payroll roster keyed by store #, standing in for the real Altametrics
+  // payroll data source. Hours are pre-rounded to 2 decimals as ADP expects.
+  const PAYROLL_ROSTER = {
+    '1029': {
+      salaried: [
+        { fileNo: 2005, regHours: 40, otHours: 13.37, holiday: 0 },
+        { fileNo: 2041, regHours: 40, otHours: 0, holiday: 1.5 }
+      ],
+      hourly: [
+        { fileNo: 2937, regHours: 37.9, otHours: 0, holiday: 0 },
+        { fileNo: 3102, regHours: 32.25, otHours: 4.5, holiday: 0 }
+      ]
+    },
+    '1016': {
+      salaried: [
+        { fileNo: 2110, regHours: 40, otHours: 0, holiday: 0 },
+        { fileNo: 2156, regHours: 40, otHours: 2.5, holiday: 0 }
+      ],
+      hourly: [
+        { fileNo: 3210, regHours: 38.5, otHours: 2.25, holiday: 0 },
+        { fileNo: 3247, regHours: 24.6, otHours: 0, holiday: 0 }
+      ]
+    },
+    '1018': {
+      salaried: [
+        { fileNo: 2214, regHours: 40, otHours: 6.2, holiday: 0 },
+        { fileNo: 2260, regHours: 40, otHours: 0, holiday: 0 }
+      ],
+      hourly: [
+        { fileNo: 3305, regHours: 29.75, otHours: 0, holiday: 0 },
+        { fileNo: 3341, regHours: 40, otHours: 3.1, holiday: 1.5 }
+      ]
+    },
+    '1032': {
+      salaried: [
+        { fileNo: 2318, regHours: 40, otHours: 0, holiday: 1.5 },
+        { fileNo: 2364, regHours: 40, otHours: 1.75, holiday: 0 }
+      ],
+      hourly: [
+        { fileNo: 3418, regHours: 40, otHours: 5, holiday: 0 },
+        { fileNo: 3455, regHours: 33.4, otHours: 0, holiday: 0 }
+      ]
+    },
+    '1044': {
+      salaried: [
+        { fileNo: 2422, regHours: 40, otHours: 0, holiday: 0 },
+        { fileNo: 2468, regHours: 40, otHours: 4.25, holiday: 0 }
+      ],
+      hourly: [
+        { fileNo: 3520, regHours: 36.8, otHours: 0, holiday: 1.5 },
+        { fileNo: 3562, regHours: 28.9, otHours: 1.6, holiday: 0 }
+      ]
+    }
+  };
+
+  const EXPORT_HEADER = ['Co Code', 'Batch ID', 'File #', 'Reg Hours', 'O/T Hours', 'Temp Dept', 'Holiday .5'];
+
+  // --- Validation modal -------------------------------------------------
+  const validationModal = document.getElementById('validationModal');
+  const validationMessage = document.getElementById('validationMessage');
+
+  function showValidationError(message) {
+    validationMessage.textContent = message;
+    validationModal.classList.add('open');
+  }
+
+  function hideValidationError() {
+    validationModal.classList.remove('open');
+  }
+
+  document.getElementById('validationClose').addEventListener('click', hideValidationError);
+  document.getElementById('validationOk').addEventListener('click', hideValidationError);
+  validationModal.addEventListener('click', function (e) {
+    if (e.target === validationModal) hideValidationError();
+  });
+
+  // Strict MM/DD/YYYY check, including real calendar-day validity (rejects 02/30/2026, 13/01/2026, etc).
+  function isValidDate(value) {
+    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec((value || '').trim());
+    if (!match) return false;
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+  }
+
+  function validateQualifiers(organization, selectedStores, payPeriodEndDate, fileType) {
+    if (!organization) {
+      return 'Please select an Organization before generating the file.';
+    }
+    if (!selectedStores.length) {
+      return 'Please select at least one Store before generating the file.';
+    }
+    if (!isValidDate(payPeriodEndDate)) {
+      return 'Invalid Week End Date. Please enter a valid date in MM/DD/YYYY format.';
+    }
+    if (!fileType) {
+      return 'Please select a File Type before generating the file.';
+    }
+    return null;
+  }
+
+  function toBatchId(mmddyyyy) {
+    const parts = mmddyyyy.split('/');
+    if (parts.length !== 3) return mmddyyyy;
+    const [mm, dd, yyyy] = parts;
+    return yyyy + mm.padStart(2, '0') + dd.padStart(2, '0');
+  }
+
+  // Given any date the user picked, returns the Sunday (MM/DD/YYYY) that ends
+  // that date's week, since the Batch ID must always land on a week-ending Sunday.
+  function getWeekEndingSunday(mmddyyyy) {
+    const parts = mmddyyyy.split('/');
+    if (parts.length !== 3) return mmddyyyy;
+    const [mm, dd, yyyy] = parts;
+    const date = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    const day = date.getDay();
+    if (day !== 0) date.setDate(date.getDate() + (7 - day));
+    const sunMm = String(date.getMonth() + 1).padStart(2, '0');
+    const sunDd = String(date.getDate()).padStart(2, '0');
+    return sunMm + '/' + sunDd + '/' + date.getFullYear();
+  }
+
+  function toTimestamp(date) {
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mi = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return hh + mi + ss;
+  }
+
+  function buildRows(selectedStores, employeeType) {
+    const rows = [];
+    selectedStores.forEach(function (storeNo) {
+      const roster = PAYROLL_ROSTER[storeNo];
+      const employees = roster ? roster[employeeType] : [];
+      (employees || []).forEach(function (emp) {
+        rows.push([
+          CO_CODE,
+          null, // Batch ID, filled in per-file below
+          emp.fileNo,
+          Number(emp.regHours.toFixed(2)),
+          Number(emp.otHours.toFixed(2)),
+          storeNo.padStart(6, '0'),
+          Number(emp.holiday.toFixed(2))
+        ]);
+      });
+    });
+    return rows;
+  }
+
+  function toCsv(rows) {
+    return rows.map(function (row) {
+      return row.map(function (cell) {
+        const value = cell === null || cell === undefined ? '' : String(cell);
+        return /[",\n]/.test(value) ? '"' + value.replace(/"/g, '""') + '"' : value;
+      }).join(',');
+    }).join('\r\n');
+  }
+
+  function downloadCsv(fileName, csvContent) {
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function generateFile(employeeType, organization, selectedStores, payPeriodEndDate) {
+    const validationError = validateQualifiers(organization, selectedStores, payPeriodEndDate, employeeType);
+    if (validationError) {
+      showValidationError(validationError);
+      return;
+    }
+
+    const weekEndDate = getWeekEndingSunday(payPeriodEndDate);
+    const batchId = toBatchId(weekEndDate);
+    const rows = buildRows(selectedStores, employeeType).map(function (row) {
+      row[1] = batchId;
+      return row;
+    });
+
+    if (!rows.length) {
+      showValidationError('No ' + employeeType + ' employees found for the selected stores and pay period.');
+      return;
+    }
+
+    const fileName = 'PR' + CO_CODE + FILE_CODE[employeeType] + '_' + batchId + '_' + toTimestamp(new Date()) + '.csv';
+    downloadCsv(fileName, toCsv([EXPORT_HEADER].concat(rows)));
+  }
+
+  // Report generation submit handler.
+  const form = document.getElementById('qualifierForm');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const format = document.getElementById('fileType').value;
+    const organization = document.getElementById('organization').value;
+    const selectedStores = storeItems.filter(function (li) {
+      return li.classList.contains('selected');
+    }).map(function (li) {
+      return li.dataset.value;
+    });
+    const payPeriodEndDate = document.getElementById('payPeriodEndDate').value;
+
+    generateFile(format, organization, selectedStores, payPeriodEndDate);
+  });
+</script>
+</body>
+</html>
